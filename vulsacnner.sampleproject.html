@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vulnerability Scanner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            font-weight: bold;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .results {
+            margin-top: 20px;
+        }
+        .result {
+            padding: 10px;
+            background-color: #e7e7e7;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .warning {
+            color: red;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Vulnerability Scanner</h1>
+        <label for="ip">Enter Target IP Address or Domain:</label>
+        <input type="text" id="ip" placeholder="e.g., 192.168.1.1">
+
+        <label for="startPort">Enter Start Port:</label>
+        <input type="number" id="startPort" value="20" min="1" max="65535">
+
+        <label for="endPort">Enter End Port:</label>
+        <input type="number" id="endPort" value="100" min="1" max="65535">
+
+        <button onclick="startScan()">Start Scan</button>
+
+        <p class="warning">⚠️ Warning: Unauthorized port scanning may be illegal. Use this tool only on networks you own or have permission to test.</p>
+
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        // List of common ports and their associated services
+        const commonPorts = {
+            21: "FTP (File Transfer Protocol)",
+            22: "SSH (Secure Shell)",
+            23: "Telnet",
+            25: "SMTP (Simple Mail Transfer Protocol)",
+            53: "DNS (Domain Name System)",
+            80: "HTTP (HyperText Transfer Protocol)",
+            135: "Windows RPC (High Risk - Can be exploited)",
+            139: "NetBIOS (Used for SMB - Potential security risk)",
+            443: "HTTPS (HyperText Transfer Protocol Secure)",
+            445: "SMB (Server Message Block - Ransomware target)",
+            3306: "MySQL Database",
+            3389: "RDP (Remote Desktop Protocol - Brute force risk)",
+            5900: "VNC (Virtual Network Computing - Remote access risk)",
+            8080: "HTTP Alternate (Often used for web proxies)"
+        };
+
+        // Function to validate IP Address
+        function isValidIP(ip) {
+            const ipPattern = /^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$/;
+            return ipPattern.test(ip);
+        }
+
+        // Function to simulate a port scan and identify vulnerabilities
+        function startScan() {
+            const ip = document.getElementById("ip").value;
+            const startPort = parseInt(document.getElementById("startPort").value);
+            const endPort = parseInt(document.getElementById("endPort").value);
+            const resultsDiv = document.getElementById("results");
+
+            // Clear previous results
+            resultsDiv.innerHTML = '';
+
+            // Validate inputs
+            if (!isValidIP(ip) || startPort > endPort || startPort < 1 || endPort > 65535) {
+                resultsDiv.innerHTML = "<p style='color: red;'>Invalid IP address or port range.</p>";
+                return;
+            }
+
+            // Simulate the scan process
+            let openPorts = [];
+            for (let port = startPort; port <= endPort; port++) {
+                if (commonPorts[port]) {
+                    openPorts.push(port);
+                }
+            }
+
+            if (openPorts.length === 0) {
+                resultsDiv.innerHTML = "<p>No common open ports found in the given range.</p>";
+            } else {
+                let vulnerabilities = '';
+                openPorts.forEach(port => {
+                    let riskLevel = "🟢 Low Risk";
+                    if ([21, 23, 445, 3389].includes(port)) riskLevel = "🔴 High Risk";
+                    if ([22, 25, 3306, 5900].includes(port)) riskLevel = "🟡 Medium Risk";
+
+                    vulnerabilities += `<div class="result">Port ${port} is open: ${commonPorts[port]} - <b>${riskLevel}</b></div>`;
+                });
+                resultsDiv.innerHTML = vulnerabilities;
+            }
+        }
+    </script>
+
+</body>
+</html>
